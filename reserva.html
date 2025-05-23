@@ -1,5 +1,269 @@
-window.addEventListener('message', function(e) {
-    if (e.data === 'closeDatePicker') {
-        // Código para cerrar la ventana emergente
-    }
-});
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reserva de Viaje</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-image: url('https://cdn-icons-png.flaticon.com/512/1055/1055683.png');
+            background-size: 150px;
+            background-position: right bottom;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        .reserva-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .avion-icon {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            opacity: 0.7;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 24px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            display: inline-block;
+        }
+        .date-picker {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .date-group {
+            flex: 1;
+            min-width: 150px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-weight: 600;
+            text-align: left;
+        }
+        input[type="date"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dfe6e9;
+            border-radius: 8px;
+            font-size: 16px;
+            color: #2d3436;
+            background-color: #f8f9fa;
+            cursor: pointer;
+        }
+        input[type="date"]:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        #guardar {
+            background-color: #3498db;
+            color: white;
+        }
+        #guardar:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        #cerrar {
+            background-color: #e74c3c;
+            color: white;
+        }
+        #cerrar:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+        }
+        .confirmation {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #2ecc71;
+            color: white;
+            border-radius: 8px;
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .selected-dates {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="reserva-container">
+        <img src="https://cdn-icons-png.flaticon.com/512/8064/8064036.png" alt="Avión" class="avion-icon">
+        <h1>✈️ Reserva tu Viaje</h1>
+        
+        <form id="dateForm">
+            <div class="date-picker">
+                <div class="date-group">
+                    <label for="fecha-llegada">Fecha de llegada:</label>
+                    <input type="date" id="fecha-llegada" required>
+                </div>
+                <div class="date-group">
+                    <label for="fecha-salida">Fecha de salida:</label>
+                    <input type="date" id="fecha-salida" required>
+                </div>
+            </div>
+            
+            <div class="selected-dates" id="selectedDates">
+                <strong>Fechas seleccionadas:</strong>
+                <div id="datesText"></div>
+            </div>
+            
+            <div class="button-group">
+                <button type="button" id="cerrar">Cerrar</button>
+                <button type="submit" id="guardar">Guardar</button>
+            </div>
+            
+            <div class="confirmation" id="confirmation">
+                ¡Reserva guardada correctamente!
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Cargar fechas guardadas al iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            const llegada = localStorage.getItem('fechaLlegada');
+            const salida = localStorage.getItem('fechaSalida');
+            
+            if (llegada) {
+                document.getElementById('fecha-llegada').value = llegada;
+            }
+            if (salida) {
+                document.getElementById('fecha-salida').value = salida;
+            }
+            
+            mostrarFechasSeleccionadas();
+            
+            // Validación de fechas
+            document.getElementById('fecha-salida').addEventListener('change', validarFechas);
+            document.getElementById('fecha-llegada').addEventListener('change', validarFechas);
+        });
+        
+        function validarFechas() {
+            const llegada = document.getElementById('fecha-llegada').value;
+            const salida = document.getElementById('fecha-salida').value;
+            
+            if (llegada && salida && salida < llegada) {
+                alert('La fecha de salida no puede ser anterior a la de llegada');
+                document.getElementById('fecha-salida').value = '';
+            }
+            
+            mostrarFechasSeleccionadas();
+        }
+        
+        function mostrarFechasSeleccionadas() {
+            const llegada = document.getElementById('fecha-llegada').value;
+            const salida = document.getElementById('fecha-salida').value;
+            const selectedDates = document.getElementById('selectedDates');
+            const datesText = document.getElementById('datesText');
+            
+            if (llegada || salida) {
+                selectedDates.style.display = 'block';
+                datesText.innerHTML = '';
+                
+                if (llegada) {
+                    datesText.innerHTML += `Llegada: ${formatearFecha(llegada)}<br>`;
+                }
+                if (salida) {
+                    datesText.innerHTML += `Salida: ${formatearFecha(salida)}`;
+                }
+            } else {
+                selectedDates.style.display = 'none';
+            }
+        }
+        
+        function formatearFecha(fecha) {
+            const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date(fecha).toLocaleDateString('es-ES', opciones);
+        }
+        
+        // Manejar el guardado
+        document.getElementById('dateForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const fechaLlegada = document.getElementById('fecha-llegada').value;
+            const fechaSalida = document.getElementById('fecha-salida').value;
+            
+            localStorage.setItem('fechaLlegada', fechaLlegada);
+            localStorage.setItem('fechaSalida', fechaSalida);
+            
+            // Mostrar confirmación
+            document.getElementById('confirmation').style.display = 'block';
+            mostrarFechasSeleccionadas();
+            
+            // Ocultar confirmación después de 2 segundos
+            setTimeout(() => {
+                document.getElementById('confirmation').style.display = 'none';
+            }, 2000);
+        });
+        
+        // Manejar el cierre - solución universal para Genially
+        document.getElementById('cerrar').addEventListener('click', function() {
+            // Intenta cerrar la ventana de varias formas compatibles
+            try {
+                // Si está en un iframe en Genially PRO
+                if (window.parent !== window) {
+                    window.parent.postMessage('closeDatePicker', '*');
+                } 
+                // Si está en una ventana emergente
+                else if (window.opener) {
+                    window.close();
+                }
+                // Si está en una pestaña normal (redirige a una URL de Genially)
+                else {
+                    window.location.href = 'https://genial.ly/'; // Reemplaza con tu URL
+                }
+            } catch (e) {
+                console.log("Error al cerrar:", e);
+                window.location.href = 'https://genial.ly/'; // Fallback
+            }
+        });
+    </script>
+</body>
+</html>
