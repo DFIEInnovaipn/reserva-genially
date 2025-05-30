@@ -3,16 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reserva de Viaje</title>
+    <title>Registro de Hallazgos</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
             background-color: #f0f8ff;
             margin: 0;
             padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             min-height: 100vh;
             background-image: url('https://cdn-icons-png.flaticon.com/512/1055/1055683.png');
             background-size: 150px;
@@ -20,42 +17,103 @@
             background-repeat: no-repeat;
             background-attachment: fixed;
         }
+
+        /* Overlay para el modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Contenedor del modal */
         .reserva-container {
             background: white;
             padding: 30px;
             border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
             width: 90%;
             max-width: 450px;
             text-align: center;
             position: relative;
             overflow: hidden;
+            transform: scale(1);
+            transition: transform 0.3s ease;
         }
+
+        .modal-overlay.hidden .reserva-container {
+            transform: scale(0.9);
+        }
+
+        /* Botón X para cerrar */
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+
+        .close-btn:hover {
+            background-color: #c0392b;
+            transform: scale(1.1);
+        }
+
         .avion-icon {
             position: absolute;
             top: 20px;
-            right: 20px;
+            left: 20px;
             width: 40px;
             opacity: 0.7;
         }
+
         h1 {
             color: #2c3e50;
             margin-bottom: 25px;
+            margin-top: 15px;
             font-size: 24px;
             border-bottom: 2px solid #3498db;
             padding-bottom: 10px;
             display: inline-block;
         }
+
         .date-picker {
             display: flex;
             gap: 15px;
             margin-bottom: 20px;
             flex-wrap: wrap;
         }
+
         .date-group {
             flex: 1;
             min-width: 150px;
         }
+
         label {
             display: block;
             margin-bottom: 8px;
@@ -63,6 +121,7 @@
             font-weight: 600;
             text-align: left;
         }
+
         input[type="date"] {
             width: 100%;
             padding: 12px;
@@ -72,17 +131,21 @@
             color: #2d3436;
             background-color: #f8f9fa;
             cursor: pointer;
+            box-sizing: border-box;
         }
+
         input[type="date"]:focus {
             border-color: #3498db;
             outline: none;
             box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
         }
+
         .button-group {
             display: flex;
             gap: 10px;
             margin-top: 20px;
         }
+
         button {
             flex: 1;
             padding: 12px;
@@ -93,22 +156,27 @@
             cursor: pointer;
             transition: all 0.3s;
         }
+
         #guardar {
             background-color: #3498db;
             color: white;
         }
+
         #guardar:hover {
             background-color: #2980b9;
             transform: translateY(-2px);
         }
+
         #cerrar {
-            background-color: #e74c3c;
+            background-color: #95a5a6;
             color: white;
         }
+
         #cerrar:hover {
-            background-color: #c0392b;
+            background-color: #7f8c8d;
             transform: translateY(-2px);
         }
+
         .confirmation {
             margin-top: 20px;
             padding: 10px;
@@ -118,10 +186,12 @@
             display: none;
             animation: fadeIn 0.5s;
         }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
         .selected-dates {
             margin-top: 15px;
             padding: 10px;
@@ -130,46 +200,121 @@
             border-left: 4px solid #3498db;
             display: none;
         }
+
+        /* Contenido de fondo (simulado) */
+        .background-content {
+            padding: 20px;
+            text-align: center;
+            color: #2c3e50;
+            position: relative;
+            z-index: 1;
+        }
+
+        .background-content h2 {
+            margin-bottom: 20px;
+            color: #3498db;
+        }
+
+        .open-modal-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 20px;
+        }
+
+        .open-modal-btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>
-    <div class="reserva-container">
-        <img src="https://cdn-icons-png.flaticon.com/512/8064/8064036.png" alt="Avión" class="avion-icon">
-        <h1>✈️ Reserva tu Viaje</h1>
-        
-        <form id="dateForm">
-            <div class="date-picker">
-                <div class="date-group">
-                    <label for="fecha-llegada">Fecha de llegada:</label>
-                    <input type="date" id="fecha-llegada" required>
+    <!-- Contenido de fondo de la página -->
+    <div class="background-content">
+        <h2>Sistema de Registro de Hallazgos</h2>
+        <p>Haz clic en el botón para registrar o consultar tus hallazgos.</p>
+        <button class="open-modal-btn" onclick="abrirModal()">📝 Registro de Hallazgos</button>
+    </div>
+
+    <!-- Modal de reserva -->
+    <div class="modal-overlay hidden" id="modalOverlay">
+        <div class="reserva-container">
+            <button class="close-btn" onclick="cerrarModal()">&times;</button>
+            <img src="https://cdn-icons-png.flaticon.com/512/8064/8064036.png" alt="Avión" class="avion-icon">
+            <h1>📝 Registro de Hallazgos</h1>
+            
+            <form id="dateForm">
+                <div class="date-picker">
+                    <div class="date-group">
+                        <label for="fecha-llegada">Fecha de inicio:</label>
+                        <input type="date" id="fecha-llegada" required>
+                    </div>
+                    <div class="date-group">
+                        <label for="fecha-salida">Fecha de finalización:</label>
+                        <input type="date" id="fecha-salida" required>
+                    </div>
                 </div>
-                <div class="date-group">
-                    <label for="fecha-salida">Fecha de salida:</label>
-                    <input type="date" id="fecha-salida" required>
+                
+                <div class="selected-dates" id="selectedDates">
+                    <strong>Fechas registradas:</strong>
+                    <div id="datesText"></div>
                 </div>
-            </div>
-            
-            <div class="selected-dates" id="selectedDates">
-                <strong>Fechas seleccionadas:</strong>
-                <div id="datesText"></div>
-            </div>
-            
-            <div class="button-group">
-                <button type="button" id="cerrar">Cerrar</button>
-                <button type="submit" id="guardar">Guardar</button>
-            </div>
-            
-            <div class="confirmation" id="confirmation">
-                ¡Reserva guardada correctamente!
-            </div>
-        </form>
+                
+                <div class="button-group">
+                    <button type="button" id="cerrar" onclick="cerrarModal()">Cerrar</button>
+                    <button type="submit" id="guardar">Guardar</button>
+                </div>
+                
+                <div class="confirmation" id="confirmation">
+                    ¡Hallazgo registrado correctamente!
+                </div>
+            </form>
+        </div>
     </div>
 
     <script>
+        // Variables globales
+        let modalOverlay = document.getElementById('modalOverlay');
+
+        // Función para abrir el modal
+        function abrirModal() {
+            modalOverlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Prevenir scroll del fondo
+        }
+
+        // Función para cerrar el modal
+        function cerrarModal() {
+            modalOverlay.classList.add('hidden');
+            document.body.style.overflow = 'auto'; // Restaurar scroll del fondo
+        }
+
+        // Cerrar modal al hacer clic en el overlay (fondo)
+        modalOverlay.addEventListener('click', function(e) {
+            if (e.target === modalOverlay) {
+                cerrarModal();
+            }
+        });
+
+        // Cerrar modal con tecla Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && !modalOverlay.classList.contains('hidden')) {
+                cerrarModal();
+            }
+        });
+
         // Cargar fechas guardadas al iniciar
         document.addEventListener('DOMContentLoaded', function() {
-            const llegada = localStorage.getItem('fechaLlegada');
-            const salida = localStorage.getItem('fechaSalida');
+            // Generar un ID único para cada usuario basado en la URL de Genially o timestamp
+            const userId = generateUserId();
+            
+            const llegada = localStorage.getItem(`fechaInicio_${userId}`);
+            const salida = localStorage.getItem(`fechaFin_${userId}`);
             
             if (llegada) {
                 document.getElementById('fecha-llegada').value = llegada;
@@ -184,13 +329,43 @@
             document.getElementById('fecha-salida').addEventListener('change', validarFechas);
             document.getElementById('fecha-llegada').addEventListener('change', validarFechas);
         });
+
+        // Generar ID único para cada usuario
+        function generateUserId() {
+            // Intenta obtener info del contexto de Genially
+            let userId = 'user_default';
+            
+            try {
+                // Si está embebido en Genially, usar información del referrer
+                if (document.referrer && document.referrer.includes('genial.ly')) {
+                    userId = 'genially_' + btoa(document.referrer).slice(-10);
+                }
+                // Si hay parámetros en la URL
+                else if (window.location.search) {
+                    userId = 'param_' + btoa(window.location.search).slice(-10);
+                }
+                // Fallback: crear un ID persistente por navegador
+                else {
+                    let storedId = localStorage.getItem('hallazgos_userId');
+                    if (!storedId) {
+                        storedId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+                        localStorage.setItem('hallazgos_userId', storedId);
+                    }
+                    userId = storedId;
+                }
+            } catch (e) {
+                console.log('Usando ID por defecto');
+            }
+            
+            return userId;
+        }
         
         function validarFechas() {
             const llegada = document.getElementById('fecha-llegada').value;
             const salida = document.getElementById('fecha-salida').value;
             
             if (llegada && salida && salida < llegada) {
-                alert('La fecha de salida no puede ser anterior a la de llegada');
+                alert('La fecha de finalización no puede ser anterior a la fecha de inicio');
                 document.getElementById('fecha-salida').value = '';
             }
             
@@ -208,10 +383,10 @@
                 datesText.innerHTML = '';
                 
                 if (llegada) {
-                    datesText.innerHTML += `Llegada: ${formatearFecha(llegada)}<br>`;
+                    datesText.innerHTML += `Inicio: ${formatearFecha(llegada)}<br>`;
                 }
                 if (salida) {
-                    datesText.innerHTML += `Salida: ${formatearFecha(salida)}`;
+                    datesText.innerHTML += `Finalización: ${formatearFecha(salida)}`;
                 }
             } else {
                 selectedDates.style.display = 'none';
@@ -227,42 +402,35 @@
         document.getElementById('dateForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            const fechaLlegada = document.getElementById('fecha-llegada').value;
-            const fechaSalida = document.getElementById('fecha-salida').value;
+            const fechaInicio = document.getElementById('fecha-llegada').value;
+            const fechaFin = document.getElementById('fecha-salida').value;
             
-            localStorage.setItem('fechaLlegada', fechaLlegada);
-            localStorage.setItem('fechaSalida', fechaSalida);
+            if (!fechaInicio || !fechaFin) {
+                alert('Por favor, completa ambas fechas antes de guardar.');
+                return;
+            }
+            
+            // Obtener ID único del usuario
+            const userId = generateUserId();
+            
+            // Guardar con ID único para evitar conflictos entre usuarios
+            localStorage.setItem(`fechaInicio_${userId}`, fechaInicio);
+            localStorage.setItem(`fechaFin_${userId}`, fechaFin);
+            
+            // Guardar timestamp del último guardado
+            localStorage.setItem(`ultimoGuardado_${userId}`, new Date().toISOString());
             
             // Mostrar confirmación
             document.getElementById('confirmation').style.display = 'block';
             mostrarFechasSeleccionadas();
             
-            // Ocultar confirmación después de 2 segundos
+            console.log(`Hallazgo guardado para usuario: ${userId}`);
+            console.log(`Fecha inicio: ${fechaInicio}, Fecha fin: ${fechaFin}`);
+            
+            // Ocultar confirmación después de 3 segundos
             setTimeout(() => {
                 document.getElementById('confirmation').style.display = 'none';
-            }, 2000);
-        });
-        
-        // Manejar el cierre - solución universal para Genially
-        document.getElementById('cerrar').addEventListener('click', function() {
-            // Intenta cerrar la ventana de varias formas compatibles
-            try {
-                // Si está en un iframe en Genially PRO
-                if (window.parent !== window) {
-                    window.parent.postMessage('closeDatePicker', '*');
-                } 
-                // Si está en una ventana emergente
-                else if (window.opener) {
-                    window.close();
-                }
-                // Si está en una pestaña normal (redirige a una URL de Genially)
-                else {
-                    window.location.href = 'https://genial.ly/'; // Reemplaza con tu URL
-                }
-            } catch (e) {
-                console.log("Error al cerrar:", e);
-                window.location.href = 'https://genial.ly/'; // Fallback
-            }
+            }, 3000);
         });
     </script>
 </body>
